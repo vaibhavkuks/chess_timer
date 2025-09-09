@@ -2,6 +2,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hyper_effects/hyper_effects.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:smooth_corner/smooth_corner.dart';
@@ -31,7 +32,6 @@ class _ChessClockMainState extends State<ChessClockMain> {
 
   @override
   void initState() {
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: []);
     super.initState();
     // Preload the tap sound with a small pool for minimal latency
     _initAudioPool();
@@ -98,282 +98,326 @@ class _ChessClockMainState extends State<ChessClockMain> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
+      resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
-          AnimatedContainer(
+          // AnimatedContainer(
+          //   duration: AppDurations.fast,
+          //   curve: Curves.easeOutCirc,
+          //   margin: EdgeInsets.only(
+          //     top: gameProvider.currentPlayerMove == PlayerMove.normal
+          //         ? MediaQuery.of(context).size.height / 2 + 38
+          //         : 0,
+          //     bottom: gameProvider.currentPlayerMove == PlayerMove.inverted
+          //         ? MediaQuery.of(context).size.height / 2 + 38
+          //         : 0,
+          //   ),
+          //   decoration: ShapeDecoration(
+          //     color: gameProvider.gameStatus == GameStatus.over
+          //         ? AppColors.danger
+          //         : AppColors.surface,
+          //     shape: SmoothRectangleBorder(
+          //       smoothness: 0.6,
+          //       borderRadius: BorderRadius.only(
+          //         topLeft: Radius.circular(
+          //           gameProvider.currentPlayerMove == PlayerMove.normal
+          //               ? AppRadii.bg
+          //               : 0,
+          //         ),
+          //         topRight: Radius.circular(
+          //           gameProvider.currentPlayerMove == PlayerMove.normal
+          //               ? AppRadii.bg
+          //               : 0,
+          //         ),
+          //         bottomLeft: Radius.circular(
+          //           gameProvider.currentPlayerMove == PlayerMove.inverted
+          //               ? AppRadii.bg
+          //               : 0,
+          //         ),
+          //         bottomRight: Radius.circular(
+          //           gameProvider.currentPlayerMove == PlayerMove.inverted
+          //               ? AppRadii.bg
+          //               : 0,
+          //         ),
+          //       ),
+          //     ),
+          //   ),
+          // ),
+          AnimatedAlign(
+            alignment: gameProvider.currentPlayerMove != PlayerMove.normal
+                ? Alignment.topCenter
+                : Alignment.bottomCenter,
             duration: AppDurations.fast,
             curve: Curves.easeOutCirc,
-            margin: EdgeInsets.only(
-              top: gameProvider.currentPlayerMove == PlayerMove.normal
-                  ? MediaQuery.of(context).size.height / 2 +
-                      24 +
-                      MediaQuery.of(context).padding.top
-                  : 0,
-              bottom: gameProvider.currentPlayerMove == PlayerMove.inverted
-                  ? MediaQuery.of(context).size.height / 2 +
-                      24 +
-                      MediaQuery.of(context).padding.bottom
-                  : 0,
-            ),
-            decoration: ShapeDecoration(
-              color: gameProvider.gameStatus == GameStatus.over
-                  ? AppColors.danger
-                  : AppColors.surface,
-              shape: SmoothRectangleBorder(
-                smoothness: 0.6,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(
-                    gameProvider.currentPlayerMove == PlayerMove.normal
-                        ? AppRadii.bg
-                        : 0,
-                  ),
-                  topRight: Radius.circular(
-                    gameProvider.currentPlayerMove == PlayerMove.normal
-                        ? AppRadii.bg
-                        : 0,
-                  ),
-                  bottomLeft: Radius.circular(
-                    gameProvider.currentPlayerMove == PlayerMove.inverted
-                        ? AppRadii.bg
-                        : 0,
-                  ),
-                  bottomRight: Radius.circular(
-                    gameProvider.currentPlayerMove == PlayerMove.inverted
-                        ? AppRadii.bg
-                        : 0,
-                  ),
+            child: AnimatedContainer(
+              duration: AppDurations.slow,
+              curve: Curves.easeOutCirc,
+              width: MediaQuery.of(context).size.width,
+              height: MediaQuery.of(context).size.height / 2 - 38,
+              decoration: ShapeDecoration(
+                color: gameProvider.gameStatus == GameStatus.over
+                    ? AppColors.danger
+                    : AppColors.surface,
+                shape: RoundedSuperellipseBorder(
+                  borderRadius: BorderRadius.circular(bgRadius),
                 ),
               ),
             ),
           ),
-          SafeArea(
-            child: Column(
-              children: [
-                Expanded(
-                  child: IgnorePointer(
-                    ignoring:
-                        gameProvider.currentPlayerMove == PlayerMove.normal ||
-                            gameIsOver,
-                    child: GestureDetector(
-                      onTapDown: (_) {},
-                      onTap: () {
-                        // HapticFeedback.lightImpact();
-                        _playTap();
-                        gameProvider.switchPlayer();
-                      },
-                      child: Stack(
-                        children: [
-                          AnimatedContainer(
-                            duration: AppDurations.fast,
-                            margin: const EdgeInsets.only(bottom: 16),
-                            decoration: const BoxDecoration(
-                              borderRadius: BorderRadius.only(
-                                bottomLeft: Radius.circular(AppRadii.bg),
-                                bottomRight: Radius.circular(AppRadii.bg),
+          Column(
+            children: [
+              Expanded(
+                child: IgnorePointer(
+                  ignoring:
+                      gameProvider.currentPlayerMove == PlayerMove.normal ||
+                          gameIsOver,
+                  child: GestureDetector(
+                    onTapDown: (_) {},
+                    onTap: () {
+                      // HapticFeedback.lightImpact();
+                      _playTap();
+                      gameProvider.switchPlayer();
+                    },
+                    child: Stack(
+                      children: [
+                        AnimatedContainer(
+                          duration: AppDurations.fast,
+                          margin: const EdgeInsets.only(top: 24),
+                          decoration: const BoxDecoration(
+                            borderRadius: BorderRadius.only(
+                              bottomLeft: Radius.circular(AppRadii.bg),
+                              bottomRight: Radius.circular(AppRadii.bg),
+                            ),
+                          ),
+                          child: Center(
+                            child: Transform.rotate(
+                              angle: pi,
+                              child: RepaintBoundary(
+                                child: FixedWidthTime(
+                                  elapsed: invertedElapsed,
+                                  gameDuration: gameDuration,
+                                  isLoser: gameProvider.isPlayerLoser(
+                                    PlayerMove.inverted,
+                                  ),
+                                  gameIsOver: gameIsOver,
+                                  increment: gameProvider
+                                      .incrementDuration, // Pass increment
+                                  style: AppTextStyles.timeLarge.copyWith(
+                                    color: gameProvider.currentPlayerMove ==
+                                            PlayerMove.inverted
+                                        ? AppColors.gray800
+                                        : AppColors.gray500,
+                                  ),
+                                ),
                               ),
                             ),
-                            child: SafeArea(
-                              child: Center(
+                          ),
+                        ),
+                        // Positioned(
+                        //   bottom: 16,
+                        //   left: 0,
+                        //   right: 0,
+                        //   child: AnimatedOpacity(
+                        //     opacity: gameProvider.currentPlayerMove ==
+                        //             PlayerMove.normal
+                        //         ? 1
+                        //         : 0,
+                        //     curve: Curves.easeOutCirc,
+                        //     duration: const Duration(milliseconds: 500),
+                        //     child: Transform.rotate(
+                        //       angle: pi,
+                        //       child: FixedWidthTime(
+                        //         elapsed: normalElapsed,
+                        //         gameDuration: gameDuration,
+                        //         isLoser: gameProvider.isPlayerLoser(
+                        //           PlayerMove.normal,
+                        //         ),
+                        //         gameIsOver: gameIsOver,
+                        //         increment: gameProvider
+                        //             .incrementDuration, // Pass increment
+                        //         style: TextStyle(
+                        //           fontSize: 20,
+                        //           color: Colors.grey.shade600,
+                        //         ),
+                        //       ),
+                        //     ),
+                        //   ),
+                        // ),
+                        // Add move counter for inverted player
+                        !(gameProvider.gameStatus == GameStatus.over ||
+                                gameProvider.gameStatus == GameStatus.idle)
+                            ? Positioned(
+                                right: 24,
+                                top: 32,
                                 child: Transform.rotate(
                                   angle: pi,
-                                  child: RepaintBoundary(
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(
-                                        bottom: 32,
-                                      ),
-                                      child: FixedWidthTime(
-                                        elapsed: invertedElapsed,
-                                        gameDuration: gameDuration,
-                                        isLoser: gameProvider.isPlayerLoser(
-                                          PlayerMove.inverted,
-                                        ),
-                                        gameIsOver: gameIsOver,
-                                        increment: gameProvider
-                                            .incrementDuration, // Pass increment
-                                        style: AppTextStyles.timeLarge.copyWith(
-                                          color:
-                                              gameProvider.currentPlayerMove ==
-                                                      PlayerMove.inverted
-                                                  ? AppColors.gray800
-                                                  : AppColors.gray500,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          // Positioned(
-                          //   bottom: 16,
-                          //   left: 0,
-                          //   right: 0,
-                          //   child: AnimatedOpacity(
-                          //     opacity: gameProvider.currentPlayerMove ==
-                          //             PlayerMove.normal
-                          //         ? 1
-                          //         : 0,
-                          //     curve: Curves.easeOutCirc,
-                          //     duration: const Duration(milliseconds: 500),
-                          //     child: Transform.rotate(
-                          //       angle: pi,
-                          //       child: FixedWidthTime(
-                          //         elapsed: normalElapsed,
-                          //         gameDuration: gameDuration,
-                          //         isLoser: gameProvider.isPlayerLoser(
-                          //           PlayerMove.normal,
-                          //         ),
-                          //         gameIsOver: gameIsOver,
-                          //         increment: gameProvider
-                          //             .incrementDuration, // Pass increment
-                          //         style: TextStyle(
-                          //           fontSize: 20,
-                          //           color: Colors.grey.shade600,
-                          //         ),
-                          //       ),
-                          //     ),
-                          //   ),
-                          // ),
-                          // Add move counter for inverted player
-                          gameProvider.invertedPlayerMoves == 0
-                              ? const SizedBox()
-                              : Positioned(
-                                  top: 0,
-                                  right: 24,
-                                  child: Transform.rotate(
-                                    angle: pi,
-                                    child: Text(
-                                      '${gameProvider.invertedPlayerMoves}',
-                                      style: TextStyle(
-                                        color: gameProvider.isPlayerLoser(
-                                          PlayerMove.inverted,
-                                        )
-                                            ? AppColors
-                                                .white // Use white for loser
-                                            : gameProvider.currentPlayerMove ==
-                                                    PlayerMove.inverted
-                                                ? AppColors.black.withAlpha(100)
-                                                : AppColors.gray600,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize:
-                                            AppTextStyles.moveCounter.fontSize,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                //options and controls
-                const ChessControlsWidget(),
-                Expanded(
-                  child: IgnorePointer(
-                    ignoring:
-                        gameProvider.currentPlayerMove == PlayerMove.inverted ||
-                            gameIsOver,
-                    child: GestureDetector(
-                      onTap: () {
-                        // HapticFeedback.lightImpact();
-                        _playTap();
-                        gameProvider.switchPlayer();
-                      },
-                      child: Stack(
-                        children: [
-                          AnimatedContainer(
-                            duration: AppDurations.fast,
-                            margin: const EdgeInsets.only(top: 16),
-                            decoration: const BoxDecoration(
-                              borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(AppRadii.bg),
-                                topRight: Radius.circular(AppRadii.bg),
-                              ),
-                            ),
-                            child: Center(
-                              child: RepaintBoundary(
-                                child: Padding(
-                                  padding: const EdgeInsets.only(
-                                    bottom: 32,
-                                  ),
-                                  child: FixedWidthTime(
-                                    elapsed: normalElapsed,
-                                    gameDuration: gameDuration,
-                                    isLoser: gameProvider.isPlayerLoser(
-                                      PlayerMove.normal,
-                                    ),
-                                    gameIsOver: gameIsOver,
-                                    increment: gameProvider
-                                        .incrementDuration, // Pass increment
-                                    style: AppTextStyles.timeLarge.copyWith(
-                                      color: gameProvider.currentPlayerMove ==
-                                              PlayerMove.normal
-                                          ? AppColors.gray800
-                                          : AppColors.gray500,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          // Positioned(
-                          //   left: 0,
-                          //   right: 0,
-                          //   top: 16,
-                          //   child: AnimatedOpacity(
-                          //     opacity: gameProvider.currentPlayerMove ==
-                          //             PlayerMove.inverted
-                          //         ? 1
-                          //         : 0,
-                          //     duration: const Duration(milliseconds: 500),
-                          //     curve: Curves.easeOutCirc,
-                          //     child: FixedWidthTime(
-                          //       elapsed: invertedElapsed,
-                          //       gameDuration: gameDuration,
-                          //       isLoser: gameProvider.isPlayerLoser(
-                          //         PlayerMove.inverted,
-                          //       ),
-                          //       gameIsOver: gameIsOver,
-                          //       increment: gameProvider
-                          //           .incrementDuration, // Pass increment
-                          //       style: TextStyle(
-                          //         fontSize: 20,
-                          //         color: Colors.grey.shade600,
-                          //       ),
-                          //     ),
-                          //   ),
-                          // ),
-                          // Add move counter for normal player
-                          gameProvider.normalPlayerMoves == 0
-                              ? const SizedBox()
-                              : Positioned(
-                                  bottom: 16,
-                                  left: 24,
                                   child: Text(
-                                    '${gameProvider.normalPlayerMoves}',
+                                    '${gameProvider.invertedPlayerMoves}',
                                     style: TextStyle(
                                       color: gameProvider.isPlayerLoser(
-                                        PlayerMove.normal,
+                                        PlayerMove.inverted,
                                       )
                                           ? AppColors
                                               .white // Use white for loser
                                           : gameProvider.currentPlayerMove ==
-                                                  PlayerMove.normal
+                                                  PlayerMove.inverted
                                               ? AppColors.black.withAlpha(100)
                                               : AppColors.gray600,
-                                      fontWeight: FontWeight.bold,
+                                      fontWeight: FontWeight.normal,
                                       fontSize:
                                           AppTextStyles.moveCounter.fontSize,
                                     ),
                                   ),
                                 ),
-                        ],
-                      ),
+                              )
+                            : const SizedBox(),
+                      ],
                     ),
                   ),
                 ),
-              ],
-            ),
+              ),
+              //options and controls
+              const ChessControlsWidget(),
+              Expanded(
+                child: IgnorePointer(
+                  ignoring:
+                      gameProvider.currentPlayerMove == PlayerMove.inverted ||
+                          gameIsOver,
+                  child: GestureDetector(
+                    onTap: () {
+                      // HapticFeedback.lightImpact();
+                      _playTap();
+                      gameProvider.switchPlayer();
+                    },
+                    child: Stack(
+                      children: [
+                        gameProvider.gameStatus == GameStatus.idle
+                            ? Positioned(
+                                top: 224,
+                                left: 0,
+                                right: 0,
+                                child: Center(
+                                  child: Shimmer.fromColors(
+                                      baseColor: AppColors.black.withAlpha(100),
+                                      highlightColor:
+                                          AppColors.black.withAlpha(60),
+                                      period: const Duration(seconds: 2),
+                                      child: const Text(
+                                        'Tap to start clock',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      )),
+                                ))
+                            : const SizedBox(),
+                        AnimatedContainer(
+                          duration: AppDurations.fast,
+                          margin: const EdgeInsets.only(bottom: 24),
+                          decoration: const BoxDecoration(
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(AppRadii.bg),
+                              topRight: Radius.circular(AppRadii.bg),
+                            ),
+                          ),
+                          child: Center(
+                            child: RepaintBoundary(
+                              child: FixedWidthTime(
+                                elapsed: normalElapsed,
+                                gameDuration: gameDuration,
+                                isLoser: gameProvider.isPlayerLoser(
+                                  PlayerMove.normal,
+                                ),
+                                gameIsOver: gameIsOver,
+                                increment: gameProvider
+                                    .incrementDuration, // Pass increment
+                                style: AppTextStyles.timeLarge.copyWith(
+                                  color: gameProvider.currentPlayerMove ==
+                                          PlayerMove.normal
+                                      ? AppColors.gray800
+                                      : AppColors.gray500,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        // Positioned(
+                        //   left: 0,
+                        //   right: 0,
+                        //   top: 16,
+                        //   child: AnimatedOpacity(
+                        //     opacity: gameProvider.currentPlayerMove ==
+                        //             PlayerMove.inverted
+                        //         ? 1
+                        //         : 0,
+                        //     duration: const Duration(milliseconds: 500),
+                        //     curve: Curves.easeOutCirc,
+                        //     child: FixedWidthTime(
+                        //       elapsed: invertedElapsed,
+                        //       gameDuration: gameDuration,
+                        //       isLoser: gameProvider.isPlayerLoser(
+                        //         PlayerMove.inverted,
+                        //       ),
+                        //       gameIsOver: gameIsOver,
+                        //       increment: gameProvider
+                        //           .incrementDuration, // Pass increment
+                        //       style: TextStyle(
+                        //         fontSize: 20,
+                        //         color: Colors.grey.shade600,
+                        //       ),
+                        //     ),
+                        //   ),
+                        // ),
+                        // Add move counter for normal player
+                        !(gameProvider.gameStatus == GameStatus.over ||
+                                gameProvider.gameStatus == GameStatus.idle)
+                            ? Positioned(
+                                bottom: 32,
+                                left: 24,
+                                child: Text(
+                                  '${gameProvider.normalPlayerMoves}',
+                                  style: TextStyle(
+                                    color: gameProvider.isPlayerLoser(
+                                      PlayerMove.normal,
+                                    )
+                                        ? AppColors.white // Use white for loser
+                                        : gameProvider.currentPlayerMove ==
+                                                PlayerMove.normal
+                                            ? AppColors.black.withAlpha(100)
+                                            : AppColors.gray600,
+                                    fontWeight: FontWeight.normal,
+                                    fontSize:
+                                        AppTextStyles.moveCounter.fontSize,
+                                  ),
+                                ),
+                              )
+                            : const SizedBox(),
+
+                        // gameProvider.gameStatus == GameStatus.idle
+                        //     ? Positioned(
+                        //         top: 64,
+                        //         left: 0,
+                        //         right: 0,
+                        //         child: Center(
+                        //           child: Shimmer.fromColors(
+                        //             baseColor: AppColors.black.withAlpha(150),
+                        //             highlightColor:
+                        //                 AppColors.black.withAlpha(250),
+                        //             child: const Text(
+                        //               'Tap here to start clock',
+                        //               style: AppTextStyles.overlaySmall,
+                        //             ),
+                        //           ),
+                        //         ),
+                        //       )
+                        //     : const SizedBox(),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
 
           // Overlay for paused state

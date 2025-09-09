@@ -86,7 +86,7 @@ class GameProvider extends ChangeNotifier {
 
   PlayerMove currentPlayerMove = PlayerMove.normal;
 
-  Duration gameDuration = const Duration(seconds: 5);
+  Duration gameDuration = const Duration(minutes: 10);
 
   Duration normalPlayerElapsed = const Duration();
   Duration invertedPlayerElapsed = const Duration();
