@@ -11,7 +11,10 @@ import '../services/game_provider.dart';
 import '../theme/app_theme.dart';
 
 class ChessControlsWidget extends StatefulWidget {
-  const ChessControlsWidget({super.key});
+  const ChessControlsWidget({super.key, this.onInactiveChanged});
+
+  // Notifies parent when controls become inactive/active due to user inactivity while running
+  final ValueChanged<bool>? onInactiveChanged;
 
   @override
   State<ChessControlsWidget> createState() => _ChessControlsWidgetState();
@@ -32,6 +35,15 @@ class _ChessControlsWidgetState extends State<ChessControlsWidget> {
 
   Timer? _inactiveTimer;
 
+  void _setInactive(bool value) {
+    if (inactive == value) return;
+    setState(() {
+      inactive = value;
+    });
+    // Notify parent
+    widget.onInactiveChanged?.call(inactive);
+  }
+
   bool isFirstFrame = true; // Flag to skip animation on first frame
 
   @override
@@ -48,17 +60,9 @@ class _ChessControlsWidgetState extends State<ChessControlsWidget> {
         final timeSinceLastInteraction = now.difference(lastInteraction!);
 
         if (timeSinceLastInteraction.inSeconds >= inactivityThreshold) {
-          if (!inactive) {
-            setState(() {
-              inactive = true;
-            });
-          }
+          if (!inactive) _setInactive(true);
         } else {
-          if (inactive) {
-            setState(() {
-              inactive = false;
-            });
-          }
+          if (inactive) _setInactive(false);
         }
       }
     });
@@ -66,20 +70,12 @@ class _ChessControlsWidgetState extends State<ChessControlsWidget> {
 
   void _stopInactiveTimer() {
     _inactiveTimer?.cancel();
-    if (inactive) {
-      setState(() {
-        inactive = false;
-      });
-    }
+    if (inactive) _setInactive(false);
   }
 
   void _recordInteraction() {
     lastInteraction = DateTime.now();
-    if (inactive) {
-      setState(() {
-        inactive = false;
-      });
-    }
+    if (inactive) _setInactive(false);
   }
 
   void _manageTimerState(bool gameIsRunning) {

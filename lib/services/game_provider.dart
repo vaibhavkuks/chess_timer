@@ -88,6 +88,9 @@ class GameProvider extends ChangeNotifier {
 
   Duration gameDuration = const Duration(minutes: 10);
 
+  // Customization mode state
+  bool _isCustomizationMode = false;
+
   Duration normalPlayerElapsed = const Duration();
   Duration invertedPlayerElapsed = const Duration();
 
@@ -349,6 +352,27 @@ class GameProvider extends ChangeNotifier {
       return "Normal Player Wins!";
     }
     return "Game Over";
+  }
+
+  // Customization mode getter and methods
+  bool get isCustomizationMode => _isCustomizationMode;
+
+  void enterCustomizationMode() {
+    _isCustomizationMode = true;
+    dev.log('🎨 Entering customization mode');
+    notifyListeners();
+  }
+
+  void exitCustomizationMode() {
+    _isCustomizationMode = false;
+    dev.log('🎨 Exiting customization mode');
+    notifyListeners();
+  }
+
+  void toggleCustomizationMode() {
+    _isCustomizationMode = !_isCustomizationMode;
+    dev.log('🎨 Toggling customization mode: $_isCustomizationMode');
+    notifyListeners();
   }
 
   // Check if a specific player is the loser

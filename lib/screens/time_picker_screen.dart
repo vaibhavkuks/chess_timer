@@ -1,3 +1,4 @@
+import 'package:chess_timer/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import '../widgets/animated_blur_overlay.dart';
 import '../widgets/custom_wheel_picker.dart';
@@ -101,15 +102,16 @@ class _TimePickerScreenState extends State<TimePickerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isZero = selectedDuration == Duration.zero;
     return AnimatedBlurOverlay(
       isVisible: true,
       blurSigma: 8,
-      duration: const Duration(milliseconds: 500),
+      duration: AppDurations.fast,
       backgroundColor: const Color(0xB3000000),
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: Container(
-          color: Colors.black.withValues(alpha: 0.4),
+          color: Colors.black.withAlpha(100),
           child: SafeArea(
             child: Column(
               children: [
@@ -181,7 +183,6 @@ class _TimePickerScreenState extends State<TimePickerScreen> {
                                   });
                                 },
                               ),
-
                               // Increment picker
                               CustomWheelPicker(
                                 label: 'Increment',
@@ -205,7 +206,20 @@ class _TimePickerScreenState extends State<TimePickerScreen> {
                     ),
                   ),
                 ),
-
+                // Show warning if duration is zero
+                isZero
+                    ? Padding(
+                        padding: const EdgeInsets.only(bottom: 8.0),
+                        child: Text(
+                          'Timer duration must be greater than 0.',
+                          style: TextStyle(
+                            color: Colors.redAccent,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
+                        ),
+                      )
+                    : SizedBox(height: 27),
                 // Bottom info section
                 const Padding(
                   padding: EdgeInsets.all(20.0),
@@ -215,7 +229,6 @@ class _TimePickerScreenState extends State<TimePickerScreen> {
                     style: TextStyle(color: Colors.white70),
                   ),
                 ),
-
                 // Actions
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -226,18 +239,23 @@ class _TimePickerScreenState extends State<TimePickerScreen> {
                           style: TextStyle(color: Colors.white70)),
                     ),
                     TextButton(
-                      onPressed: () {
-                        if (selectedDuration != Duration.zero) {
-                          Navigator.pop(
-                              context, [selectedDuration, selectedIncrement]);
-                        } else {
-                          Navigator.pop(context, null);
-                        }
-                      },
+                      onPressed: isZero
+                          ? null
+                          : () {
+                              Navigator.pop(context,
+                                  [selectedDuration, selectedIncrement]);
+                            },
+                      style: ButtonStyle(
+                        foregroundColor:
+                            WidgetStateProperty.resolveWith<Color>((states) {
+                          if (isZero || states.contains(WidgetState.disabled)) {
+                            return Colors.white38;
+                          }
+                          return Colors.white;
+                        }),
+                      ),
                       child: const Text('Done',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold)),
+                          style: TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   ],
                 ),

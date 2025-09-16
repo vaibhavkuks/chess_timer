@@ -2,16 +2,17 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:hyper_effects/hyper_effects.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:smooth_corner/smooth_corner.dart';
 import 'dart:math';
 import '../theme/app_theme.dart';
 import '../services/game_provider.dart';
 import '../widgets/fixed_width_time.dart';
 import '../widgets/animated_blur_overlay.dart';
 import '../widgets/chess_controls_widget.dart';
+import '../widgets/customization_cards.dart';
+import 'settings_screen.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 class ChessClockMain extends StatefulWidget {
   const ChessClockMain({super.key});
@@ -29,16 +30,15 @@ class _ChessClockMainState extends State<ChessClockMain> {
   AudioPool? _tapPool; // Ultra-low-latency pool for tap sound
   final AudioPlayer _fallbackPlayer = AudioPlayer();
   String _assetKey = 'assets/audio/chess.m4a';
+  bool _controlsInactive = false;
 
   @override
   void initState() {
     super.initState();
-    // Preload the tap sound with a small pool for minimal latency
     _initAudioPool();
   }
 
   Future<void> _initAudioPool() async {
-    // Try common asset keys
     for (final key in <String>['assets/audio/chess.m4a', 'audio/chess.m4a']) {
       try {
         final pool = await AudioPool.create(
@@ -51,7 +51,6 @@ class _ChessClockMainState extends State<ChessClockMain> {
         break;
       } catch (_) {
         debugPrint('Tap sound pool init failed for: $key');
-        // try next key
       }
     }
     if (_tapPool == null) {
@@ -66,16 +65,9 @@ class _ChessClockMainState extends State<ChessClockMain> {
         return;
       }
       _fallbackPlayer.play(AssetSource(_assetKey));
-    } catch (e) {
-      debugPrint('Tap sound play error: $e');
-      // As a last resort, use a system click sound (very low latency)
+    } catch (_) {
       SystemSound.play(SystemSoundType.click);
     }
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
   }
 
   @override
@@ -101,48 +93,7 @@ class _ChessClockMainState extends State<ChessClockMain> {
       resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
-          // AnimatedContainer(
-          //   duration: AppDurations.fast,
-          //   curve: Curves.easeOutCirc,
-          //   margin: EdgeInsets.only(
-          //     top: gameProvider.currentPlayerMove == PlayerMove.normal
-          //         ? MediaQuery.of(context).size.height / 2 + 38
-          //         : 0,
-          //     bottom: gameProvider.currentPlayerMove == PlayerMove.inverted
-          //         ? MediaQuery.of(context).size.height / 2 + 38
-          //         : 0,
-          //   ),
-          //   decoration: ShapeDecoration(
-          //     color: gameProvider.gameStatus == GameStatus.over
-          //         ? AppColors.danger
-          //         : AppColors.surface,
-          //     shape: SmoothRectangleBorder(
-          //       smoothness: 0.6,
-          //       borderRadius: BorderRadius.only(
-          //         topLeft: Radius.circular(
-          //           gameProvider.currentPlayerMove == PlayerMove.normal
-          //               ? AppRadii.bg
-          //               : 0,
-          //         ),
-          //         topRight: Radius.circular(
-          //           gameProvider.currentPlayerMove == PlayerMove.normal
-          //               ? AppRadii.bg
-          //               : 0,
-          //         ),
-          //         bottomLeft: Radius.circular(
-          //           gameProvider.currentPlayerMove == PlayerMove.inverted
-          //               ? AppRadii.bg
-          //               : 0,
-          //         ),
-          //         bottomRight: Radius.circular(
-          //           gameProvider.currentPlayerMove == PlayerMove.inverted
-          //               ? AppRadii.bg
-          //               : 0,
-          //         ),
-          //       ),
-          //     ),
-          //   ),
-          // ),
+          // Central moving panel
           AnimatedAlign(
             alignment: gameProvider.currentPlayerMove != PlayerMove.normal
                 ? Alignment.topCenter
@@ -276,8 +227,89 @@ class _ChessClockMainState extends State<ChessClockMain> {
                   ),
                 ),
               ),
-              //options and controls
-              const ChessControlsWidget(),
+              // options and controls row with external settings button
+
+              AnimatedSize(
+                duration: AppDurations.fast,
+                child: SizedBox(
+                  height: 64,
+                  child: gameProvider.isCustomizationMode
+                      ? const CustomizationScrollableCards()
+                      : Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              // Settings button placed outside the controls widget
+                              IgnorePointer(
+                                ignoring: _controlsInactive,
+                                child: AnimatedScale(
+                                  scale: _controlsInactive ? 0.8 : 1.0,
+                                  duration: AppDurations.medium,
+                                  curve: Curves.easeOutCubic,
+                                  child: AnimatedOpacity(
+                                    opacity: _controlsInactive ? 0.0 : 1.0,
+                                    duration: AppDurations.medium,
+                                    curve: Curves.easeOutCubic,
+                                    child: IconButton(
+                                      icon: Icon(SolarIconsOutline.settings,
+                                          size: 22, color: Colors.white70),
+                                      onPressed: () async {
+                                        await Navigator.push(
+                                          context,
+                                          PageRouteBuilder(
+                                            opaque: false,
+                                            pageBuilder: (context, animation,
+                                                    secondaryAnimation) =>
+                                                const SettingsScreen(),
+                                            transitionsBuilder: (context,
+                                                    animation,
+                                                    secondaryAnimation,
+                                                    child) =>
+                                                FadeTransition(
+                                                    opacity: animation,
+                                                    child: child),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              ChessControlsWidget(
+                                onInactiveChanged: (inactive) {
+                                  if (_controlsInactive != inactive) {
+                                    setState(
+                                        () => _controlsInactive = inactive);
+                                  }
+                                },
+                              ),
+                              IgnorePointer(
+                                ignoring: _controlsInactive,
+                                child: AnimatedScale(
+                                  scale: _controlsInactive ? 0.8 : 1.0,
+                                  duration: AppDurations.medium,
+                                  curve: Curves.easeOutCubic,
+                                  child: AnimatedOpacity(
+                                    opacity: _controlsInactive ? 0.0 : 1.0,
+                                    duration: AppDurations.medium,
+                                    curve: Curves.easeOutCubic,
+                                    child: IconButton(
+                                      icon: Icon(SolarIconsOutline.palette2,
+                                          size: 22, color: Colors.white70),
+                                      onPressed: () {
+                                        gameProvider.toggleCustomizationMode();
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                ),
+              ),
               Expanded(
                 child: IgnorePointer(
                   ignoring:
